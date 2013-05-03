@@ -2,6 +2,8 @@
 heka-java
 ==========
 
+.. image:: https://travis-ci.org/dhneio/heka-java.png
+
 heka-java is a Java client for `Heka <http://heka-docs.readthedocs.org/en/latest/>`_.
 
 The code is in a very early state; the API is still likely to change and there are sure to be a plethora of bugs, so use this in production at your own risk.
@@ -9,7 +11,9 @@ The code is in a very early state; the API is still likely to change and there a
 Examples
 ========
 
-Connecting to a ``hekad`` instance over UDP and sending a message::
+Connecting to a ``hekad`` instance over UDP and sending a message:
+
+.. code-block:: java
 
     HekaClient hekaClient = HekaClient.udp("localhost", 4880);
 
@@ -20,7 +24,9 @@ Connecting to a ``hekad`` instance over UDP and sending a message::
         .build();
     hekaClient.send(msg);
 
-Connecting to multiple TCP instances (events will be sent across all connections) with JSON message encoding (instead of the default, protocol buffers)::
+Connecting to multiple TCP instances (events will be sent across all connections) with JSON message encoding (instead of the default, protocol buffers):
+
+.. code-block:: java
 
     Encoder encoder = new JsonEncoder();
 
@@ -31,7 +37,9 @@ Connecting to multiple TCP instances (events will be sent across all connections
 
     HekaClient hekaClient = new HekaClient(transport, new MessageDefaults());
 
-Configuring HMAC authentication::
+Configuring HMAC authentication:
+
+.. code-block:: java
 
     HmacConfiguration hConf = new HmacConfiguration(
                     "ops",
@@ -44,7 +52,9 @@ Configuring HMAC authentication::
 
     HekaClient hekaClient = HekaClient.tcp("localhost", 5565, encoder);
 
-Setting default values for messages::
+Setting default values for messages:
+
+.. code-block:: java
 
     MessageDefaults defaults = new MessageDefaults();
     defaults.setLogger("java_logger");
@@ -52,7 +62,9 @@ Setting default values for messages::
 
     hekaClient.setDefaults(defaults);
 
-Filtering messages::
+Filtering messages:
+
+.. code-block:: java
 
     Filter maxSeverityFilter = new MaxSeverityFilter(5);
     hekaClient.addFilter(maxSeverityFilter);
