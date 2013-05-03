@@ -26,7 +26,7 @@
                         <configuration>
                             <target>
                                 <mkdir dir="target/generated-sources" />
-                                <exec failonerror="true" executable="/opt/local/bin/protoc">
+                                <exec failonerror="true" executable="protoc">
                                     <arg value="--java_out=target/generated-sources" />
                                     <arg value="src/main/protobuf/heka.proto" />
                                 </exec>
