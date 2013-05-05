@@ -52,4 +52,15 @@ public class MaxSeverityFilterTest {
         assertTrue(filter6.filter(msgMock));
         assertTrue(filter7.filter(msgMock));
     }
+
+    @Test
+    public void testModification() {
+        Message msgMock = mock(Message.class);
+        when(msgMock.getSeverity()).thenReturn(new Integer(4));
+
+        assertEquals(4, filter4.getMaxSeverity());
+        filter4.setMaxSeverity(3);
+        assertEquals(3, filter4.getMaxSeverity());
+        assertFalse(filter4.filter(msgMock));
+    }
 }

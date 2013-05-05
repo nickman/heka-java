@@ -3,6 +3,7 @@ package io.github.dhneio.heka.filters;
 import io.github.dhneio.heka.MessageFilter;
 import io.github.dhneio.heka.Message;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -16,12 +17,16 @@ public class TypeWhitelistFilter implements MessageFilter {
         whitelist = new CopyOnWriteArraySet<String>();
     }
 
-    public void add(String type) {
+    public void addType(String type) {
         whitelist.add(type);
     }
 
-    public void remove(String type) {
+    public void removeType(String type) {
         whitelist.remove(type);
+    }
+
+    public Set<String> getTypes() {
+        return new HashSet<String>(whitelist);
     }
 
     @Override

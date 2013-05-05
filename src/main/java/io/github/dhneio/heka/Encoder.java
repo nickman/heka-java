@@ -12,6 +12,8 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -22,10 +24,39 @@ public abstract class Encoder extends SimpleChannelHandler {
     private volatile HmacConfiguration hmacConfiguration;
 
     @Override
-    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws IOException {
         Message message = (Message)e.getMessage();
-        byte[] messageBytes = encodeMessage(message);
+        ChannelBuffer cb = encodeToChannelBuffer(message);
+        Channels.write(ctx, e.getFuture(), cb);
+    }
 
+    public void encode(Message message, OutputStream stream) throws IOException {
+        byte[] messageBytes = encodeMessage(message);
+        byte[] headerBytes = encodeHeader(messageBytes);
+
+        stream.write(RECORD_SEPARATOR);
+        stream.write(headerBytes.length);
+        stream.write(headerBytes);
+        stream.write(UNIT_SEPARATOR);
+        stream.write(messageBytes);
+    }
+
+    public ChannelBuffer encodeToChannelBuffer(Message message) throws IOException {
+        byte[] messageBytes = encodeMessage(message);
+        byte[] headerBytes = encodeHeader(messageBytes);
+
+        ChannelBuffer cb = ChannelBuffers.buffer(2 + headerBytes.length + 1 + messageBytes.length);
+        ChannelBufferOutputStream cbos = new ChannelBufferOutputStream(cb);
+        cbos.writeByte(RECORD_SEPARATOR);
+        cbos.writeByte(headerBytes.length);
+        cbos.write(headerBytes);
+        cbos.writeByte(UNIT_SEPARATOR);
+        cbos.write(messageBytes);
+
+        return cb;
+    }
+
+    private byte[] encodeHeader(byte[] messageBytes) {
         Protobuf.Header.Builder headerBuilder = Protobuf.Header.newBuilder()
                 .setMessageLength(messageBytes.length)
                 .setMessageEncoding(getMessageEncoding());
@@ -35,17 +66,7 @@ public abstract class Encoder extends SimpleChannelHandler {
             signMessage(messageBytes, headerBuilder, hConf);
         }
 
-        Protobuf.Header header = headerBuilder.build();
-
-        ChannelBuffer cb = ChannelBuffers.buffer(3 + messageBytes.length + header.getSerializedSize());
-        ChannelBufferOutputStream cbos = new ChannelBufferOutputStream(cb);
-        cbos.writeByte(RECORD_SEPARATOR);
-        cbos.writeByte(header.getSerializedSize());
-        header.writeTo(cbos);
-        cbos.writeByte(UNIT_SEPARATOR);
-        cbos.write(messageBytes);
-
-        Channels.write(ctx, e.getFuture(), cb);
+        return headerBuilder.build().toByteArray();
     }
 
     private void signMessage(byte[] messageBytes,
@@ -67,6 +88,7 @@ public abstract class Encoder extends SimpleChannelHandler {
         }
 
         headerBuilder.setHmacSigner(config.signer);
+        headerBuilder.setHmacKeyVersion(config.keyVersion);
         headerBuilder.setHmacHashFunction(hmacHashFunction);
 
         SecretKeySpec key = new SecretKeySpec(config.key.getBytes(), algorithm);

@@ -2,7 +2,6 @@ package io.github.dhneio.heka;
 
 import static org.junit.Assert.*;
 
-import io.github.dhneio.heka.MessageDefaults;
 import org.junit.Before;
 import org.junit.Test;
 

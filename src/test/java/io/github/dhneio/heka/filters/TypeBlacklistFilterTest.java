@@ -4,8 +4,10 @@ import io.github.dhneio.heka.Message;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,8 +42,8 @@ public class TypeBlacklistFilterTest {
     @Test
     public void testBlacklist() {
         TypeBlacklistFilter filter = new TypeBlacklistFilter();
-        filter.add("foo");
-        filter.add("bar");
+        filter.addType("foo");
+        filter.addType("bar");
 
         assertTrue(filter.filter(nullMsg));
         assertFalse(filter.filter(fooMsg));
@@ -52,11 +54,29 @@ public class TypeBlacklistFilterTest {
     @Test
     public void testBlacklistWithNull() {
         TypeBlacklistFilter filter = new TypeBlacklistFilter();
-        filter.add(null);
+        filter.addType(null);
 
         assertFalse(filter.filter(nullMsg));
         assertTrue(filter.filter(fooMsg));
         assertTrue(filter.filter(barMsg));
         assertTrue(filter.filter(bazMsg));
+    }
+
+    @Test
+    public void testModification() {
+        TypeBlacklistFilter filter = new TypeBlacklistFilter();
+
+        Set<String> types = new HashSet<String>();
+        assertEquals(types, filter.getTypes());
+
+        filter.addType("a");
+        filter.addType("b");
+        types.add("a");
+        types.add("b");
+        assertEquals(types, filter.getTypes());
+
+        filter.removeType("a");
+        types.remove("a");
+        assertEquals(types, filter.getTypes());
     }
 }

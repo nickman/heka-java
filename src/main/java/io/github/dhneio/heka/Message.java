@@ -18,7 +18,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class Message {
     private final Protobuf.Message message;
 
-    private Message(Protobuf.Message message) {
+    Message(Protobuf.Message message) {
         this.message = message;
     }
 

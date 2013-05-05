@@ -3,8 +3,10 @@ package io.github.dhneio.heka;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,10 +32,31 @@ public class HekaClientTest {
         when(defaults.getTimestamp()).thenReturn(timestamp);
 
         HekaClient hc = new HekaClient(transport, defaults);
+        assertEquals(defaults, hc.getDefaults());
+
         Message msg = hc.message().build();
 
         assertEquals(uuid, msg.getUuid());
         assertEquals(timestamp, msg.getTimestamp());
+
+        msg = hc.message("a_type").build();
+        assertEquals("a_type", msg.getType());
+
+        hc.setDefaults(null);
+        assertNull(hc.getDefaults());
+    }
+
+    @Test
+    public void testCounterConstruction() {
+        Transport transport = mock(Transport.class);
+
+        HekaClient hc = new HekaClient(transport, new MessageDefaults());
+        Message msg = hc.counter("ctr1").build();
+        assertEquals("counter", msg.getType());
+        assertEquals("1", msg.getPayload());
+
+        msg = hc.counter("ctr1").incr(42).build();
+        assertEquals("42", msg.getPayload());
     }
 
     @Test
@@ -77,8 +100,16 @@ public class HekaClientTest {
         // verify short circuiting
         verify(failsMsg2, never()).filter(msg1);
 
+        List<MessageFilter> filterList = new ArrayList<MessageFilter>();
+        filterList.add(failsMsg1);
+        filterList.add(failsMsg2);
+        assertEquals(filterList, hc.getFilters());
+
+        hc.removeFilter(failsMsg1);
+        filterList.remove(failsMsg1);
+        assertEquals(filterList, hc.getFilters());
+
         hc.clearFilters();
-        filterChain = hc.getFilters();
-        assertTrue(filterChain.isEmpty());
+        assertTrue(hc.getFilters().isEmpty());
     }
 }
